@@ -33,7 +33,7 @@ describe("MemberDetailPage", () => {
       data: member,
       isLoading: false,
       isError: false,
-    } as ReturnType<typeof memberHooks.useMember>);
+    } as unknown as ReturnType<typeof memberHooks.useMember>);
     vi.mocked(memberHooks.useUpdateMemberStatus).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
@@ -42,7 +42,7 @@ describe("MemberDetailPage", () => {
       data: [],
       isLoading: false,
       isError: false,
-    } as ReturnType<typeof paymentHooks.useMemberPayments>);
+    } as unknown as ReturnType<typeof paymentHooks.useMemberPayments>);
   });
 
   it("renders member details", () => {
