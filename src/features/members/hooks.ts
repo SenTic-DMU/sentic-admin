@@ -40,6 +40,7 @@ export function useUpdateMemberStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    scope: { id: "member-status-update" },
     mutationFn: ({ id, status }: UpdateStatusVariables) =>
       updateMemberStatus(id, status),
     onMutate: async ({ id, status }): Promise<MutationContext> => {
