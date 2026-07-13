@@ -9,10 +9,15 @@ import { StatusBadge } from "../../components/common/StatusBadge";
 import { useMembers, useUpdateMemberStatus } from "../../features/members/hooks";
 import type { Member } from "../../features/members/types";
 
+function parsePage(raw: string | null): number {
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+}
+
 export function MembersListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const keyword = searchParams.get("keyword") ?? "";
-  const page = Number(searchParams.get("page") ?? "0");
+  const page = parsePage(searchParams.get("page"));
 
   const { data, isLoading, isError } = useMembers(keyword, page);
   const updateStatus = useUpdateMemberStatus();

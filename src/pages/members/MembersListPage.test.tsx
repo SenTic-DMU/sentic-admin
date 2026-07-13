@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { MembersListPage } from "./MembersListPage";
 import * as hooks from "../../features/members/hooks";
 
@@ -52,5 +52,16 @@ describe("MembersListPage", () => {
     );
     await user.click(screen.getByRole("button", { name: "비활성으로 전환" }));
     expect(mutate).toHaveBeenCalledWith({ id: "1", status: "INACTIVE" });
+  });
+
+  it("falls back to page 0 when the page query param is invalid", () => {
+    render(
+      <MemoryRouter initialEntries={["/members?page=abc"]}>
+        <Routes>
+          <Route path="/members" element={<MembersListPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(hooks.useMembers).toHaveBeenLastCalledWith("", 0);
   });
 });
