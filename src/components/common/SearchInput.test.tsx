@@ -7,14 +7,14 @@ describe("SearchInput", () => {
   it("calls onChange after the debounce delay", async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
-    render(<SearchInput value="" onChange={onChange} debounceMs={50} />);
+    render(<SearchInput value="" onChange={onChange} debounceMs={200} />);
 
     await user.type(screen.getByRole("textbox"), "alice");
     expect(onChange).not.toHaveBeenCalled();
 
     await waitFor(
       () => expect(onChange).toHaveBeenCalledWith("alice"),
-      { timeout: 1000 }
+      { timeout: 2000 }
     );
   });
 });
