@@ -10,3 +10,15 @@ export interface Payment {
   status: PaymentStatus;
   paidAt: string;
 }
+
+export interface PaymentListResponse {
+  content: Payment[];
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface FetchPaymentsParams {
+  status?: PaymentStatus;
+  memberId?: string;
+  page: number;
+}

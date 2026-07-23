@@ -77,7 +77,15 @@ export function MemberDetailPage() {
       </button>
 
       <section className="space-y-2">
-        <h2 className="text-base font-semibold">결제 내역</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold">결제 내역</h2>
+          <Link
+            to={`/payments?memberId=${id}`}
+            className="text-sm text-slate-500 hover:underline"
+          >
+            전체 결제 내역 보기
+          </Link>
+        </div>
         <DataTable
           columns={paymentColumns}
           data={payments ?? []}

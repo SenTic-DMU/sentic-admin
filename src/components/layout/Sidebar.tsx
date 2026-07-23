@@ -1,7 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthContext";
 
-const NAV_ITEMS = [{ to: "/members", label: "회원관리" }];
+const NAV_ITEMS = [
+  { to: "/members", label: "회원관리" },
+  { to: "/notices", label: "공지사항" },
+  { to: "/faq", label: "FAQ 관리" },
+  { to: "/payments", label: "결제 내역" },
+];
 
 export function Sidebar() {
   const { logout } = useAuth();
