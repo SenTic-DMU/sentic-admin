@@ -1,16 +1,19 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import { MembersListPage } from "./MembersListPage";
 import * as hooks from "../../features/members/hooks";
 
 vi.mock("../../features/members/hooks");
 
 const member = {
-  id: "1",
+  id: 1,
+  loginId: "alice",
   email: "a@b.com",
   nickname: "Alice",
+  provider: "LOCAL",
+  role: "USER",
   createdAt: "2026-01-01T00:00:00Z",
   status: "ACTIVE" as const,
 };
@@ -18,7 +21,7 @@ const member = {
 describe("MembersListPage", () => {
   beforeEach(() => {
     vi.mocked(hooks.useMembers).mockReturnValue({
-      data: { content: [member], totalElements: 1, totalPages: 1 },
+      data: [member],
       isLoading: false,
       isError: false,
     } as ReturnType<typeof hooks.useMembers>);
@@ -36,9 +39,10 @@ describe("MembersListPage", () => {
     );
     expect(screen.getByText("a@b.com")).toBeInTheDocument();
     expect(screen.getByText("Alice")).toBeInTheDocument();
+    expect(screen.getByText("LOCAL")).toBeInTheDocument();
   });
 
-  it("triggers the status mutation when the toggle button is clicked", async () => {
+  it("triggers the status mutation when a new status is selected", async () => {
     const mutate = vi.fn();
     vi.mocked(hooks.useUpdateMemberStatus).mockReturnValue({
       mutate,
@@ -50,18 +54,16 @@ describe("MembersListPage", () => {
         <MembersListPage />
       </MemoryRouter>
     );
-    await user.click(screen.getByRole("button", { name: "비활성으로 전환" }));
+    await user.selectOptions(screen.getByRole("combobox"), "INACTIVE");
     expect(mutate).toHaveBeenCalledWith({ id: "1", status: "INACTIVE" });
   });
 
-  it("falls back to page 0 when the page query param is invalid", () => {
+  it("requests members with the keyword query param", () => {
     render(
-      <MemoryRouter initialEntries={["/members?page=abc"]}>
-        <Routes>
-          <Route path="/members" element={<MembersListPage />} />
-        </Routes>
+      <MemoryRouter initialEntries={["/members?keyword=alice"]}>
+        <MembersListPage />
       </MemoryRouter>
     );
-    expect(hooks.useMembers).toHaveBeenLastCalledWith("", 0);
+    expect(hooks.useMembers).toHaveBeenLastCalledWith("alice");
   });
 });

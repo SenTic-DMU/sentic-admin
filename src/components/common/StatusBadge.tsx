@@ -10,6 +10,7 @@ const TONE_CLASSES: Record<BadgeTone, string> = {
 const MEMBER_STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
   ACTIVE: { label: "활성", tone: "green" },
   INACTIVE: { label: "비활성", tone: "gray" },
+  BANNED: { label: "정지", tone: "red" },
 };
 
 const PAYMENT_STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
