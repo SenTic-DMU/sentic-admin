@@ -8,8 +8,8 @@ import * as hooks from "../../features/faq/hooks";
 vi.mock("../../features/faq/hooks");
 
 const faqs = [
-  { id: "1", question: "질문1", answer: "답변1", orderNum: 1 },
-  { id: "2", question: "질문2", answer: "답변2", orderNum: 2 },
+  { id: 1, question: "질문1", answer: "답변1", orderNum: 1 },
+  { id: 2, question: "질문2", answer: "답변2", orderNum: 2 },
 ];
 
 describe("FaqListPage", () => {

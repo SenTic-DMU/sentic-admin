@@ -22,7 +22,7 @@ export function FaqListPage() {
 
   function handleConfirmDelete() {
     if (!deleteTarget) return;
-    deleteFaq.mutate(deleteTarget.id, {
+    deleteFaq.mutate(String(deleteTarget.id), {
       onSuccess: () => setDeleteTarget(null),
     });
   }
@@ -41,7 +41,9 @@ export function FaqListPage() {
               type="button"
               className="rounded border px-2 py-1 text-xs hover:bg-slate-100 disabled:opacity-40"
               disabled={index <= 0 || moveFaqOrder.isPending}
-              onClick={() => moveFaqOrder.mutate({ id: faq.id, direction: "UP" })}
+              onClick={() =>
+                moveFaqOrder.mutate({ id: String(faq.id), direction: "UP" })
+              }
             >
               ↑
             </button>
@@ -50,7 +52,7 @@ export function FaqListPage() {
               className="rounded border px-2 py-1 text-xs hover:bg-slate-100 disabled:opacity-40"
               disabled={index >= faqs.length - 1 || moveFaqOrder.isPending}
               onClick={() =>
-                moveFaqOrder.mutate({ id: faq.id, direction: "DOWN" })
+                moveFaqOrder.mutate({ id: String(faq.id), direction: "DOWN" })
               }
             >
               ↓

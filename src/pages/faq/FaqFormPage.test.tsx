@@ -50,7 +50,7 @@ describe("FaqFormPage", () => {
 
   it("prefills the form and submits an update in edit mode", async () => {
     vi.mocked(hooks.useFaqs).mockReturnValue({
-      data: [{ id: "1", question: "기존 질문", answer: "기존 답변", orderNum: 1 }],
+      data: [{ id: 1, question: "기존 질문", answer: "기존 답변", orderNum: 1 }],
       isLoading: false,
     } as unknown as ReturnType<typeof hooks.useFaqs>);
     const mutate = vi.fn();

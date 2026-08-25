@@ -9,7 +9,7 @@ export function FaqFormPage() {
   const navigate = useNavigate();
 
   const { data: faqs, isLoading } = useFaqs();
-  const faq = faqs?.find((f) => f.id === faqId);
+  const faq = faqs?.find((f) => String(f.id) === faqId);
   const createFaq = useCreateFaq();
   const updateFaq = useUpdateFaq();
 
