@@ -7,7 +7,7 @@ import { Input } from "../../components/ui/input";
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,10 +17,14 @@ export function LoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await login(email, password);
+      await login(loginId, password);
       navigate("/members", { replace: true });
-    } catch {
-      setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "아이디 또는 비밀번호가 올바르지 않습니다."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -34,14 +38,14 @@ export function LoginPage() {
       >
         <h1 className="text-xl font-semibold">관리자 로그인</h1>
         <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium">
-            이메일
+          <label htmlFor="loginId" className="text-sm font-medium">
+            아이디
           </label>
           <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="loginId"
+            type="text"
+            value={loginId}
+            onChange={(e) => setLoginId(e.target.value)}
             required
           />
         </div>

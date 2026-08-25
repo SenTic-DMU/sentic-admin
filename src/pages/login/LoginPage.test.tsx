@@ -30,12 +30,18 @@ describe("LoginPage", () => {
   it("navigates to /members after a successful login", async () => {
     vi.mocked(api.login).mockResolvedValue({
       accessToken: "token-123",
-      admin: { id: "1", email: "admin@sentic.com", name: "Admin" },
+      admin: {
+        id: 1,
+        loginId: "admin",
+        email: "admin@sentic.com",
+        nickname: "관리자",
+        role: "ADMIN",
+      },
     });
     const user = userEvent.setup();
     renderLoginPage();
 
-    await user.type(screen.getByLabelText("이메일"), "admin@sentic.com");
+    await user.type(screen.getByLabelText("아이디"), "admin");
     await user.type(screen.getByLabelText("비밀번호"), "password");
     await user.click(screen.getByRole("button", { name: "로그인" }));
 
@@ -49,14 +55,12 @@ describe("LoginPage", () => {
     const user = userEvent.setup();
     renderLoginPage();
 
-    await user.type(screen.getByLabelText("이메일"), "admin@sentic.com");
+    await user.type(screen.getByLabelText("아이디"), "admin");
     await user.type(screen.getByLabelText("비밀번호"), "wrong-password");
     await user.click(screen.getByRole("button", { name: "로그인" }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText("이메일 또는 비밀번호가 올바르지 않습니다.")
-      ).toBeInTheDocument();
+      expect(screen.getByText("unauthorized")).toBeInTheDocument();
     });
   });
 });

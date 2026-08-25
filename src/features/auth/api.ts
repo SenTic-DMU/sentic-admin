@@ -9,7 +9,7 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
     return mockLogin(payload);
   }
   const { data } = await apiClient.post<LoginResponse>(
-    "/admin/auth/login",
+    "/api/auth/login",
     payload
   );
   return data;

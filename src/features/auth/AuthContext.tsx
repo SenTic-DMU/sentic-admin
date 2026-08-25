@@ -15,7 +15,7 @@ const ADMIN_STORAGE_KEY = "admin_user";
 interface AuthContextValue {
   admin: AdminUser | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (loginId: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -35,8 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [admin]);
 
-  async function login(email: string, password: string) {
-    const response = await loginRequest({ email, password });
+  async function login(loginId: string, password: string) {
+    const response = await loginRequest({ loginId, password });
+    if (response.admin.role !== "ADMIN") {
+      throw new Error("관리자 권한이 없습니다.");
+    }
     localStorage.setItem(TOKEN_STORAGE_KEY, response.accessToken);
     setAdmin(response.admin);
   }
