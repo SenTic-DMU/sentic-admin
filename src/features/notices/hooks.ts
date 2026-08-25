@@ -4,22 +4,21 @@ import {
   deleteNotice,
   fetchNotice,
   fetchNotices,
+  togglePinNotice,
   updateNotice,
 } from "./api";
 import type { NoticeInput } from "./types";
 
-export function noticesQueryKey(page: number) {
-  return ["notices", page] as const;
-}
+export const NOTICES_QUERY_KEY = ["notices"] as const;
 
 export function noticeQueryKey(id: string) {
   return ["notice", id] as const;
 }
 
-export function useNotices(page: number) {
+export function useNotices() {
   return useQuery({
-    queryKey: noticesQueryKey(page),
-    queryFn: () => fetchNotices({ page }),
+    queryKey: NOTICES_QUERY_KEY,
+    queryFn: fetchNotices,
   });
 }
 
@@ -36,7 +35,7 @@ export function useCreateNotice() {
   return useMutation({
     mutationFn: (input: NoticeInput) => createNotice(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: NOTICES_QUERY_KEY });
     },
   });
 }
@@ -47,7 +46,7 @@ export function useUpdateNotice() {
     mutationFn: ({ id, input }: { id: string; input: NoticeInput }) =>
       updateNotice(id, input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: NOTICES_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: noticeQueryKey(variables.id) });
     },
   });
@@ -58,7 +57,17 @@ export function useDeleteNotice() {
   return useMutation({
     mutationFn: (id: string) => deleteNotice(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: NOTICES_QUERY_KEY });
+    },
+  });
+}
+
+export function useTogglePinNotice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => togglePinNotice(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: NOTICES_QUERY_KEY });
     },
   });
 }

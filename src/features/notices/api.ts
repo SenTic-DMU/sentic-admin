@@ -4,26 +4,18 @@ import {
   mockDeleteNotice,
   mockFetchNotice,
   mockFetchNotices,
+  mockTogglePinNotice,
   mockUpdateNotice,
 } from "./mock";
-import type {
-  FetchNoticesParams,
-  Notice,
-  NoticeInput,
-  NoticeListResponse,
-} from "./types";
+import type { Notice, NoticeInput } from "./types";
 
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === "true";
 
-export async function fetchNotices(
-  params: FetchNoticesParams
-): Promise<NoticeListResponse> {
+export async function fetchNotices(): Promise<Notice[]> {
   if (USE_MOCK_API) {
-    return mockFetchNotices(params);
+    return mockFetchNotices();
   }
-  const { data } = await apiClient.get<NoticeListResponse>("/admin/notices", {
-    params: { page: params.page },
-  });
+  const { data } = await apiClient.get<Notice[]>("/api/admin/announcements");
   return data;
 }
 
@@ -31,7 +23,9 @@ export async function fetchNotice(id: string): Promise<Notice> {
   if (USE_MOCK_API) {
     return mockFetchNotice(id);
   }
-  const { data } = await apiClient.get<Notice>(`/admin/notices/${id}`);
+  const { data } = await apiClient.get<Notice>(
+    `/api/admin/announcements/${id}`
+  );
   return data;
 }
 
@@ -39,7 +33,10 @@ export async function createNotice(input: NoticeInput): Promise<Notice> {
   if (USE_MOCK_API) {
     return mockCreateNotice(input);
   }
-  const { data } = await apiClient.post<Notice>("/admin/notices", input);
+  const { data } = await apiClient.post<Notice>(
+    "/api/admin/announcements",
+    input
+  );
   return data;
 }
 
@@ -50,7 +47,10 @@ export async function updateNotice(
   if (USE_MOCK_API) {
     return mockUpdateNotice(id, input);
   }
-  const { data } = await apiClient.put<Notice>(`/admin/notices/${id}`, input);
+  const { data } = await apiClient.put<Notice>(
+    `/api/admin/announcements/${id}`,
+    input
+  );
   return data;
 }
 
@@ -58,5 +58,15 @@ export async function deleteNotice(id: string): Promise<void> {
   if (USE_MOCK_API) {
     return mockDeleteNotice(id);
   }
-  await apiClient.delete(`/admin/notices/${id}`);
+  await apiClient.delete(`/api/admin/announcements/${id}`);
+}
+
+export async function togglePinNotice(id: string): Promise<Notice> {
+  if (USE_MOCK_API) {
+    return mockTogglePinNotice(id);
+  }
+  const { data } = await apiClient.put<Notice>(
+    `/api/admin/announcements/${id}/pin`
+  );
+  return data;
 }

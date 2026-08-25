@@ -1,24 +1,13 @@
 export interface Notice {
-  id: string;
+  id: number;
   title: string;
   content: string;
-  isPinned: boolean;
+  pinned: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface NoticeListResponse {
-  content: Notice[];
-  totalElements: number;
-  totalPages: number;
-}
-
-export interface FetchNoticesParams {
-  page: number;
 }
 
 export interface NoticeInput {
   title: string;
   content: string;
-  isPinned: boolean;
 }

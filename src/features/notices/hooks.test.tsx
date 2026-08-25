@@ -6,6 +6,7 @@ import {
   useCreateNotice,
   useDeleteNotice,
   useNotices,
+  useTogglePinNotice,
   useUpdateNotice,
 } from "./hooks";
 import * as api from "./api";
@@ -30,26 +31,23 @@ describe("notices hooks", () => {
     vi.mocked(api.createNotice).mockReset();
     vi.mocked(api.updateNotice).mockReset();
     vi.mocked(api.deleteNotice).mockReset();
+    vi.mocked(api.togglePinNotice).mockReset();
   });
 
   it("invalidates the notices list after creating a notice", async () => {
-    vi.mocked(api.fetchNotices).mockResolvedValue({
-      content: [],
-      totalElements: 0,
-      totalPages: 1,
-    });
+    vi.mocked(api.fetchNotices).mockResolvedValue([]);
     vi.mocked(api.createNotice).mockResolvedValue({
-      id: "1",
+      id: 1,
       title: "t",
       content: "c",
-      isPinned: false,
+      pinned: false,
       createdAt: "2026-01-01",
       updatedAt: "2026-01-01",
     });
 
     const { wrapper, queryClient } = createWrapper();
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
-    const { result: listResult } = renderHook(() => useNotices(0), { wrapper });
+    const { result: listResult } = renderHook(() => useNotices(), { wrapper });
     await waitFor(() => expect(listResult.current.data).toBeDefined());
 
     const { result: mutationResult } = renderHook(() => useCreateNotice(), {
@@ -57,11 +55,7 @@ describe("notices hooks", () => {
     });
 
     await act(async () => {
-      await mutationResult.current.mutateAsync({
-        title: "t",
-        content: "c",
-        isPinned: false,
-      });
+      await mutationResult.current.mutateAsync({ title: "t", content: "c" });
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["notices"] });
@@ -69,10 +63,10 @@ describe("notices hooks", () => {
 
   it("invalidates the notices list and detail after updating a notice", async () => {
     vi.mocked(api.updateNotice).mockResolvedValue({
-      id: "1",
+      id: 1,
       title: "t2",
       content: "c2",
-      isPinned: true,
+      pinned: false,
       createdAt: "2026-01-01",
       updatedAt: "2026-01-02",
     });
@@ -84,7 +78,7 @@ describe("notices hooks", () => {
     await act(async () => {
       await result.current.mutateAsync({
         id: "1",
-        input: { title: "t2", content: "c2", isPinned: true },
+        input: { title: "t2", content: "c2" },
       });
     });
 
@@ -98,6 +92,27 @@ describe("notices hooks", () => {
     const { wrapper, queryClient } = createWrapper();
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
     const { result } = renderHook(() => useDeleteNotice(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync("1");
+    });
+
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["notices"] });
+  });
+
+  it("invalidates the notices list after toggling pin", async () => {
+    vi.mocked(api.togglePinNotice).mockResolvedValue({
+      id: 1,
+      title: "t",
+      content: "c",
+      pinned: true,
+      createdAt: "2026-01-01",
+      updatedAt: "2026-01-02",
+    });
+
+    const { wrapper, queryClient } = createWrapper();
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => useTogglePinNotice(), { wrapper });
 
     await act(async () => {
       await result.current.mutateAsync("1");
