@@ -43,9 +43,58 @@ describe("NoticeFormPage", () => {
     await user.click(screen.getByRole("button", { name: "작성" }));
 
     expect(mutate).toHaveBeenCalledWith(
-      { title: "새 공지", content: "공지 내용입니다" },
+      { title: "새 공지", content: "공지 내용입니다", sendPush: false },
       expect.anything()
     );
+  });
+
+  it("submits sendPush: true when the push checkbox is checked", async () => {
+    const mutate = vi.fn();
+    vi.mocked(hooks.useCreateNotice).mockReturnValue({
+      mutate,
+      isPending: false,
+    } as unknown as ReturnType<typeof hooks.useCreateNotice>);
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={["/notices/new"]}>
+        <Routes>
+          <Route path="/notices/new" element={<NoticeFormPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText("제목"), "새 공지");
+    await user.type(screen.getByLabelText("내용"), "공지 내용입니다");
+    await user.click(screen.getByLabelText("푸시 알림도 보내기"));
+    await user.click(screen.getByRole("button", { name: "작성" }));
+
+    expect(mutate).toHaveBeenCalledWith(
+      { title: "새 공지", content: "공지 내용입니다", sendPush: true },
+      expect.anything()
+    );
+  });
+
+  it("does not show the push checkbox in edit mode", async () => {
+    vi.mocked(hooks.useNotice).mockReturnValue({
+      data: {
+        id: 1,
+        title: "기존 제목",
+        content: "기존 내용",
+        pinned: false,
+        createdAt: "2026-01-01",
+        updatedAt: "2026-01-01",
+      },
+      isLoading: false,
+    } as ReturnType<typeof hooks.useNotice>);
+    render(
+      <MemoryRouter initialEntries={["/notices/1/edit"]}>
+        <Routes>
+          <Route path="/notices/:noticeId/edit" element={<NoticeFormPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByLabelText("푸시 알림도 보내기")).not.toBeInTheDocument();
   });
 
   it("prefills the form and submits an update in edit mode", async () => {

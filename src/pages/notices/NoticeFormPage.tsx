@@ -19,6 +19,7 @@ export function NoticeFormPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [sendPush, setSendPush] = useState(false);
 
   useEffect(() => {
     if (notice) {
@@ -31,7 +32,7 @@ export function NoticeFormPage() {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const input = { title, content };
+    const input = isEditMode ? { title, content } : { title, content, sendPush };
     if (isEditMode && noticeId) {
       updateNotice.mutate(
         { id: noticeId, input },
@@ -87,6 +88,16 @@ export function NoticeFormPage() {
             required
           />
         </div>
+        {!isEditMode && (
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={sendPush}
+              onChange={(e) => setSendPush(e.target.checked)}
+            />
+            푸시 알림도 보내기
+          </label>
+        )}
         <div className="flex gap-2">
           <Button type="submit" disabled={isSaving}>
             {isEditMode ? "수정" : "작성"}

@@ -10,4 +10,5 @@ export interface Notice {
 export interface NoticeInput {
   title: string;
   content: string;
+  sendPush?: boolean;
 }
