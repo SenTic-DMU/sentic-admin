@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { AxiosHeaders } from "axios";
-import type { InternalAxiosRequestConfig, AxiosError } from "axios";
-import { attachAuthHeader, handleAuthError } from "./apiClient";
+import type { InternalAxiosRequestConfig, AxiosError, AxiosResponse } from "axios";
+import { attachAuthHeader, handleAuthError, unwrapEnvelope } from "./apiClient";
 
 describe("attachAuthHeader", () => {
   beforeEach(() => {
@@ -43,5 +43,33 @@ describe("handleAuthError", () => {
     await expect(handleAuthError(error, redirect)).rejects.toBe(error);
     expect(localStorage.getItem("admin_access_token")).toBe("test-token");
     expect(redirect).not.toHaveBeenCalled();
+  });
+});
+
+describe("unwrapEnvelope", () => {
+  it("returns the unwrapped data when success is true", () => {
+    const response = {
+      data: { success: true, data: { id: 1 } },
+    } as AxiosResponse;
+    const result = unwrapEnvelope(response);
+    expect(result.data).toEqual({ id: 1 });
+  });
+
+  it("throws with the server message when success is false", () => {
+    const response = {
+      data: { success: false, message: "권한이 없습니다." },
+    } as AxiosResponse;
+    expect(() => unwrapEnvelope(response)).toThrow("권한이 없습니다.");
+  });
+
+  it("throws a default message when success is false and message is missing", () => {
+    const response = { data: { success: false } } as AxiosResponse;
+    expect(() => unwrapEnvelope(response)).toThrow("요청이 실패했습니다.");
+  });
+
+  it("passes through responses without a success field", () => {
+    const response = { data: [1, 2, 3] } as AxiosResponse;
+    const result = unwrapEnvelope(response);
+    expect(result.data).toEqual([1, 2, 3]);
   });
 });

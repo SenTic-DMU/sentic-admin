@@ -1,11 +1,21 @@
 import axios from "axios";
-import type { InternalAxiosRequestConfig, AxiosError } from "axios";
+import type {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 
 const TOKEN_STORAGE_KEY = "admin_access_token";
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 });
+
+export interface ApiEnvelope<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
 
 export function attachAuthHeader(
   config: InternalAxiosRequestConfig
@@ -15,6 +25,18 @@ export function attachAuthHeader(
     config.headers.set("Authorization", `Bearer ${token}`);
   }
   return config;
+}
+
+export function unwrapEnvelope(response: AxiosResponse): AxiosResponse {
+  const body = response.data as ApiEnvelope<unknown> | unknown;
+  if (body && typeof body === "object" && "success" in body) {
+    const envelope = body as ApiEnvelope<unknown>;
+    if (!envelope.success) {
+      throw new Error(envelope.message ?? "요청이 실패했습니다.");
+    }
+    response.data = envelope.data;
+  }
+  return response;
 }
 
 export function handleAuthError(
@@ -31,7 +53,6 @@ export function handleAuthError(
 }
 
 apiClient.interceptors.request.use(attachAuthHeader);
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => handleAuthError(error)
+apiClient.interceptors.response.use(unwrapEnvelope, (error: AxiosError) =>
+  handleAuthError(error)
 );
