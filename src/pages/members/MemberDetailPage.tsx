@@ -100,7 +100,7 @@ export function MemberDetailPage() {
         <DataTable
           columns={paymentColumns}
           data={payments ?? []}
-          rowKey={(payment) => payment.id}
+          rowKey={(payment) => String(payment.id)}
           emptyMessage="결제 내역이 없습니다."
         />
       </section>

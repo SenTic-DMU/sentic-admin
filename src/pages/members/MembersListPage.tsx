@@ -84,7 +84,7 @@ export function MembersListPage() {
         <p className="text-sm text-red-600">회원 목록을 불러오지 못했습니다.</p>
       )}
       {data && (
-        <DataTable columns={columns} data={data} rowKey={(member) => member.id} />
+        <DataTable columns={columns} data={data} rowKey={(member) => String(member.id)} />
       )}
     </div>
   );

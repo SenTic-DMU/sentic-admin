@@ -107,7 +107,7 @@ export function NoticesListPage() {
         <DataTable
           columns={columns}
           data={notices}
-          rowKey={(notice) => notice.id}
+          rowKey={(notice) => String(notice.id)}
         />
       )}
       <ConfirmDialog

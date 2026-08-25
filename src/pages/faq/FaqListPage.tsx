@@ -109,7 +109,7 @@ export function FaqListPage() {
         <p className="text-sm text-red-600">FAQ 목록을 불러오지 못했습니다.</p>
       )}
       {data && (
-        <DataTable columns={columns} data={faqs} rowKey={(faq) => faq.id} />
+        <DataTable columns={columns} data={faqs} rowKey={(faq) => String(faq.id)} />
       )}
       <ConfirmDialog
         open={deleteTarget !== null}

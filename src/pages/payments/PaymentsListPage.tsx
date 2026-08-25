@@ -113,7 +113,7 @@ export function PaymentsListPage() {
         <DataTable
           columns={columns}
           data={data}
-          rowKey={(payment) => payment.id}
+          rowKey={(payment) => String(payment.id)}
           emptyMessage="결제 내역이 없습니다."
         />
       )}
