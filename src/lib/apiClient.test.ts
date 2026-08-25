@@ -41,7 +41,7 @@ describe("handleAuthError", () => {
     expect(redirect).toHaveBeenCalled();
   });
 
-  it("keeps the token and does not redirect for non-401 errors", async () => {
+  it("keeps the token and does not redirect for non-401/403 errors", async () => {
     localStorage.setItem("admin_access_token", "test-token");
     const redirect = vi.fn();
     const error = { response: { status: 500 } } as AxiosError;
@@ -67,6 +67,24 @@ describe("handleAuthError", () => {
     expect(retryRequest).toHaveBeenCalledWith(
       expect.objectContaining({ _retried: true })
     );
+    expect(result).toBe(retriedResponse);
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it("also refreshes and retries on a 403 (this backend uses 403 for expired/missing tokens)", async () => {
+    const redirect = vi.fn();
+    const refresh = vi.fn().mockResolvedValue("new-access-token");
+    const retriedResponse = { data: { ok: true } } as AxiosResponse;
+    const retryRequest = vi.fn().mockResolvedValue(retriedResponse);
+    const config = {
+      headers: new AxiosHeaders(),
+      _retried: false,
+    } as InternalAxiosRequestConfig;
+    const error = { response: { status: 403 }, config } as AxiosError;
+
+    const result = await handleAuthError(error, { redirect, refresh, retryRequest });
+
+    expect(refresh).toHaveBeenCalled();
     expect(result).toBe(retriedResponse);
     expect(redirect).not.toHaveBeenCalled();
   });

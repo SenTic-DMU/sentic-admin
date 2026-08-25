@@ -102,7 +102,12 @@ export async function handleAuthError(
     retryRequest = (config) => apiClient.request(config),
   } = deps;
 
-  if (error.response?.status !== 401) {
+  // 이 백엔드는 토큰이 없거나 만료됐을 때도(뿐 아니라 ADMIN 권한이 없을 때도)
+  // Spring Security 필터 단에서 401이 아니라 403(바디 없음)으로 막는다.
+  // 로그인 시점에 이미 ADMIN인지 확인하므로, 로그인 이후의 403은 사실상
+  // "토큰이 유효하지 않음"으로 보고 401과 동일하게 재발급을 시도한다.
+  const status = error.response?.status;
+  if (status !== 401 && status !== 403) {
     return Promise.reject(error);
   }
 
