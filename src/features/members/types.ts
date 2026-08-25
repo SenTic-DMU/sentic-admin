@@ -1,20 +1,16 @@
-export type MemberStatus = "ACTIVE" | "INACTIVE";
+export type MemberStatus = "ACTIVE" | "INACTIVE" | "BANNED";
 
 export interface Member {
-  id: string;
+  id: number;
+  loginId: string;
   email: string;
   nickname: string;
-  createdAt: string;
+  provider: string;
+  role: string;
   status: MemberStatus;
-}
-
-export interface MemberListResponse {
-  content: Member[];
-  totalElements: number;
-  totalPages: number;
+  createdAt: string;
 }
 
 export interface FetchMembersParams {
   keyword: string;
-  page: number;
 }

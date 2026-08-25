@@ -1,19 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchMember, fetchMembers, updateMemberStatus } from "./api";
-import type { Member, MemberListResponse, MemberStatus } from "./types";
+import type { Member, MemberStatus } from "./types";
 
-export function membersQueryKey(keyword: string, page: number) {
-  return ["members", keyword, page] as const;
+export function membersQueryKey(keyword: string) {
+  return ["members", keyword] as const;
 }
 
 export function memberQueryKey(id: string) {
   return ["member", id] as const;
 }
 
-export function useMembers(keyword: string, page: number) {
+export function useMembers(keyword: string) {
   return useQuery({
-    queryKey: membersQueryKey(keyword, page),
-    queryFn: () => fetchMembers({ keyword, page }),
+    queryKey: membersQueryKey(keyword),
+    queryFn: () => fetchMembers({ keyword }),
   });
 }
 
@@ -31,7 +31,7 @@ interface UpdateStatusVariables {
 }
 
 interface MutationContext {
-  previousMemberLists: [readonly unknown[], MemberListResponse | undefined][];
+  previousMemberLists: [readonly unknown[], Member[] | undefined][];
   previousMember: Member | undefined;
   id: string;
 }
@@ -47,26 +47,19 @@ export function useUpdateMemberStatus() {
       await queryClient.cancelQueries({ queryKey: ["members"] });
       await queryClient.cancelQueries({ queryKey: memberQueryKey(id) });
 
-      const previousMemberLists =
-        queryClient.getQueriesData<MemberListResponse>({
-          queryKey: ["members"],
-        });
+      const previousMemberLists = queryClient.getQueriesData<Member[]>({
+        queryKey: ["members"],
+      });
       const previousMember = queryClient.getQueryData<Member>(
         memberQueryKey(id)
       );
 
-      queryClient.setQueriesData<MemberListResponse>(
-        { queryKey: ["members"] },
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            content: old.content.map((member) =>
-              member.id === id ? { ...member, status } : member
-            ),
-          };
-        }
-      );
+      queryClient.setQueriesData<Member[]>({ queryKey: ["members"] }, (old) => {
+        if (!old) return old;
+        return old.map((member) =>
+          String(member.id) === id ? { ...member, status } : member
+        );
+      });
 
       if (previousMember) {
         queryClient.setQueryData<Member>(memberQueryKey(id), {
