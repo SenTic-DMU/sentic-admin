@@ -10,9 +10,18 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retried?: boolean;
 }
 
-export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-});
+const baseURL = import.meta.env.VITE_API_BASE_URL;
+
+export const apiClient = axios.create({ baseURL });
+
+// ngrok 무료 티어는 브라우저 요청에 경고 인터스티셜 페이지를 끼워넣는데,
+// 그 페이지에는 CORS 헤더가 없어서 브라우저에는 CORS 에러로 보인다.
+// 이 헤더를 실어 보내면 인터스티셜 없이 바로 실제 응답을 받는다.
+const NGROK_SKIP_WARNING_HEADERS = baseURL?.includes("ngrok")
+  ? { "ngrok-skip-browser-warning": "true" }
+  : {};
+
+Object.assign(apiClient.defaults.headers.common, NGROK_SKIP_WARNING_HEADERS);
 
 export interface ApiEnvelope<T> {
   success: boolean;
@@ -51,8 +60,8 @@ async function performTokenRefresh(): Promise<string> {
   }
   const response = await axios.post<
     ApiEnvelope<{ accessToken: string; refreshToken: string }>
-  >(`${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`, undefined, {
-    headers: { "Refresh-Token": refreshToken },
+  >(`${baseURL}/api/auth/refresh`, undefined, {
+    headers: { "Refresh-Token": refreshToken, ...NGROK_SKIP_WARNING_HEADERS },
   });
   if (!response.data.success) {
     throw new Error(response.data.message ?? "토큰 재발급에 실패했습니다.");
