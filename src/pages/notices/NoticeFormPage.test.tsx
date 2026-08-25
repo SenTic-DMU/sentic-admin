@@ -40,11 +40,10 @@ describe("NoticeFormPage", () => {
 
     await user.type(screen.getByLabelText("제목"), "새 공지");
     await user.type(screen.getByLabelText("내용"), "공지 내용입니다");
-    await user.click(screen.getByLabelText("상단 고정"));
     await user.click(screen.getByRole("button", { name: "작성" }));
 
     expect(mutate).toHaveBeenCalledWith(
-      { title: "새 공지", content: "공지 내용입니다", isPinned: true },
+      { title: "새 공지", content: "공지 내용입니다" },
       expect.anything()
     );
   });
@@ -52,10 +51,10 @@ describe("NoticeFormPage", () => {
   it("prefills the form and submits an update in edit mode", async () => {
     vi.mocked(hooks.useNotice).mockReturnValue({
       data: {
-        id: "1",
+        id: 1,
         title: "기존 제목",
         content: "기존 내용",
-        isPinned: false,
+        pinned: false,
         createdAt: "2026-01-01",
         updatedAt: "2026-01-01",
       },
@@ -81,7 +80,7 @@ describe("NoticeFormPage", () => {
     expect(mutate).toHaveBeenCalledWith(
       {
         id: "1",
-        input: { title: "기존 제목", content: "기존 내용", isPinned: false },
+        input: { title: "기존 제목", content: "기존 내용" },
       },
       expect.anything()
     );

@@ -8,10 +8,10 @@ import * as hooks from "../../features/notices/hooks";
 vi.mock("../../features/notices/hooks");
 
 const notice = {
-  id: "1",
+  id: 1,
   title: "공지 제목",
   content: "공지 내용",
-  isPinned: true,
+  pinned: true,
   createdAt: "2026-01-01T00:00:00Z",
   updatedAt: "2026-01-01T00:00:00Z",
 };
@@ -19,14 +19,14 @@ const notice = {
 describe("NoticesListPage", () => {
   beforeEach(() => {
     vi.mocked(hooks.useNotices).mockReturnValue({
-      data: { content: [notice], totalElements: 1, totalPages: 1 },
+      data: [notice],
       isLoading: false,
       isError: false,
     } as ReturnType<typeof hooks.useNotices>);
-    vi.mocked(hooks.useUpdateNotice).mockReturnValue({
+    vi.mocked(hooks.useTogglePinNotice).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-    } as unknown as ReturnType<typeof hooks.useUpdateNotice>);
+    } as unknown as ReturnType<typeof hooks.useTogglePinNotice>);
     vi.mocked(hooks.useDeleteNotice).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
@@ -45,10 +45,10 @@ describe("NoticesListPage", () => {
 
   it("triggers the pin toggle mutation when clicked", async () => {
     const mutate = vi.fn();
-    vi.mocked(hooks.useUpdateNotice).mockReturnValue({
+    vi.mocked(hooks.useTogglePinNotice).mockReturnValue({
       mutate,
       isPending: false,
-    } as unknown as ReturnType<typeof hooks.useUpdateNotice>);
+    } as unknown as ReturnType<typeof hooks.useTogglePinNotice>);
     const user = userEvent.setup();
     render(
       <MemoryRouter>
@@ -56,10 +56,7 @@ describe("NoticesListPage", () => {
       </MemoryRouter>
     );
     await user.click(screen.getByRole("button", { name: "고정 해제" }));
-    expect(mutate).toHaveBeenCalledWith({
-      id: "1",
-      input: { title: "공지 제목", content: "공지 내용", isPinned: false },
-    });
+    expect(mutate).toHaveBeenCalledWith("1");
   });
 
   it("opens a confirm dialog and deletes the notice on confirm", async () => {

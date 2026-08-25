@@ -19,13 +19,11 @@ export function NoticeFormPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [isPinned, setIsPinned] = useState(false);
 
   useEffect(() => {
     if (notice) {
       setTitle(notice.title);
       setContent(notice.content);
-      setIsPinned(notice.isPinned);
     }
   }, [notice]);
 
@@ -33,7 +31,7 @@ export function NoticeFormPage() {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const input = { title, content, isPinned };
+    const input = { title, content };
     if (isEditMode && noticeId) {
       updateNotice.mutate(
         { id: noticeId, input },
@@ -89,14 +87,6 @@ export function NoticeFormPage() {
             required
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={isPinned}
-            onChange={(e) => setIsPinned(e.target.checked)}
-          />
-          상단 고정
-        </label>
         <div className="flex gap-2">
           <Button type="submit" disabled={isSaving}>
             {isEditMode ? "수정" : "작성"}

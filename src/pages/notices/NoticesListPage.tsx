@@ -1,54 +1,40 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   DataTable,
   type DataTableColumn,
 } from "../../components/common/DataTable";
-import { Pagination } from "../../components/common/Pagination";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { Button } from "../../components/ui/button";
 import {
   useDeleteNotice,
   useNotices,
-  useUpdateNotice,
+  useTogglePinNotice,
 } from "../../features/notices/hooks";
 import type { Notice } from "../../features/notices/types";
 
-function parsePage(raw: string | null): number {
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+function sortNotices(notices: Notice[]): Notice[] {
+  return [...notices].sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 }
 
 export function NoticesListPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const page = parsePage(searchParams.get("page"));
   const [deleteTarget, setDeleteTarget] = useState<Notice | null>(null);
 
-  const { data, isLoading, isError } = useNotices(page);
-  const updateNotice = useUpdateNotice();
+  const { data, isLoading, isError } = useNotices();
+  const togglePin = useTogglePinNotice();
   const deleteNotice = useDeleteNotice();
-
-  function handlePageChange(nextPage: number) {
-    setSearchParams({ page: String(nextPage) });
-  }
-
-  function handleTogglePinned(notice: Notice) {
-    updateNotice.mutate({
-      id: notice.id,
-      input: {
-        title: notice.title,
-        content: notice.content,
-        isPinned: !notice.isPinned,
-      },
-    });
-  }
 
   function handleConfirmDelete() {
     if (!deleteTarget) return;
-    deleteNotice.mutate(deleteTarget.id, {
+    deleteNotice.mutate(String(deleteTarget.id), {
       onSuccess: () => setDeleteTarget(null),
     });
   }
+
+  const notices = data ? sortNotices(data) : [];
 
   const columns: DataTableColumn<Notice>[] = [
     {
@@ -59,7 +45,7 @@ export function NoticesListPage() {
           to={`/notices/${notice.id}/edit`}
           className="font-medium text-slate-900 hover:underline"
         >
-          {notice.isPinned && (
+          {notice.pinned && (
             <span className="mr-2 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
               고정
             </span>
@@ -82,10 +68,10 @@ export function NoticesListPage() {
           <button
             type="button"
             className="rounded border px-2 py-1 text-xs hover:bg-slate-100"
-            onClick={() => handleTogglePinned(notice)}
-            disabled={updateNotice.isPending}
+            onClick={() => togglePin.mutate(String(notice.id))}
+            disabled={togglePin.isPending}
           >
-            {notice.isPinned ? "고정 해제" : "상단 고정"}
+            {notice.pinned ? "고정 해제" : "상단 고정"}
           </button>
           <Link
             to={`/notices/${notice.id}/edit`}
@@ -118,18 +104,11 @@ export function NoticesListPage() {
         <p className="text-sm text-red-600">공지사항을 불러오지 못했습니다.</p>
       )}
       {data && (
-        <>
-          <DataTable
-            columns={columns}
-            data={data.content}
-            rowKey={(notice) => notice.id}
-          />
-          <Pagination
-            page={page}
-            totalPages={data.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </>
+        <DataTable
+          columns={columns}
+          data={notices}
+          rowKey={(notice) => notice.id}
+        />
       )}
       <ConfirmDialog
         open={deleteTarget !== null}
