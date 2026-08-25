@@ -8,14 +8,15 @@ import * as hooks from "../../features/payments/hooks";
 vi.mock("../../features/payments/hooks");
 
 const payment = {
-  id: "p1",
-  memberId: "1",
-  memberEmail: "alice@sentic.com",
-  memberNickname: "Alice",
+  id: 1,
+  userId: 1,
+  planId: 1,
   amount: 9900,
-  planName: "Premium",
   status: "SUCCESS" as const,
+  paymentMethod: "CARD",
   paidAt: "2026-01-06T00:00:00Z",
+  expiresAt: "2026-02-06T00:00:00Z",
+  createdAt: "2026-01-06T00:00:00Z",
 };
 
 function renderPage(initialEntry = "/payments") {
@@ -31,7 +32,7 @@ function renderPage(initialEntry = "/payments") {
 describe("PaymentsListPage", () => {
   beforeEach(() => {
     vi.mocked(hooks.usePayments).mockReturnValue({
-      data: { content: [payment], totalElements: 1, totalPages: 1 },
+      data: [payment],
       isLoading: false,
       isError: false,
     } as ReturnType<typeof hooks.usePayments>);
@@ -39,18 +40,18 @@ describe("PaymentsListPage", () => {
 
   it("renders the payment list", () => {
     renderPage();
-    expect(screen.getByText("Alice (alice@sentic.com)")).toBeInTheDocument();
-    expect(screen.getByText("Premium")).toBeInTheDocument();
+    expect(screen.getByText("회원 #1")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
   });
 
   it("requests payments with the status parsed from the query string", () => {
-    renderPage("/payments?status=SUCCESS&page=0");
-    expect(hooks.usePayments).toHaveBeenLastCalledWith("SUCCESS", undefined, 0);
+    renderPage("/payments?status=SUCCESS");
+    expect(hooks.usePayments).toHaveBeenLastCalledWith("SUCCESS", undefined);
   });
 
   it("requests payments filtered by memberId from the query string", () => {
     renderPage("/payments?memberId=1");
-    expect(hooks.usePayments).toHaveBeenLastCalledWith(undefined, "1", 0);
+    expect(hooks.usePayments).toHaveBeenLastCalledWith(undefined, "1");
     expect(screen.getByText("회원 ID: 1 로 필터링 중")).toBeInTheDocument();
   });
 
@@ -58,13 +59,13 @@ describe("PaymentsListPage", () => {
     const user = userEvent.setup();
     renderPage();
     await user.selectOptions(screen.getByRole("combobox"), "PENDING");
-    expect(hooks.usePayments).toHaveBeenLastCalledWith("PENDING", undefined, 0);
+    expect(hooks.usePayments).toHaveBeenLastCalledWith("PENDING", undefined);
   });
 
   it("clears the member filter when the clear button is clicked", async () => {
     const user = userEvent.setup();
     renderPage("/payments?memberId=1");
     await user.click(screen.getByRole("button", { name: "필터 해제" }));
-    expect(hooks.usePayments).toHaveBeenLastCalledWith(undefined, undefined, 0);
+    expect(hooks.usePayments).toHaveBeenLastCalledWith(undefined, undefined);
   });
 });
