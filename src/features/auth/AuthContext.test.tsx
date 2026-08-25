@@ -6,11 +6,17 @@ import * as api from "./api";
 
 vi.mock("./api");
 
+function makeToken(role: string, sub = "1"): string {
+  const encode = (value: unknown) =>
+    btoa(JSON.stringify(value)).replace(/\+/g, "-").replace(/\//g, "_");
+  return `${encode({ alg: "none" })}.${encode({ sub, role, exp: 9999999999 })}.sig`;
+}
+
 function TestConsumer() {
   const { admin, isAuthenticated, login, logout } = useAuth();
   return (
     <div>
-      <p>{isAuthenticated ? `logged-in:${admin?.loginId}` : "logged-out"}</p>
+      <p>{isAuthenticated ? `logged-in:${admin?.id}` : "logged-out"}</p>
       <button onClick={() => login("admin", "password").catch(() => {})}>
         login
       </button>
@@ -19,24 +25,16 @@ function TestConsumer() {
   );
 }
 
-const adminUser = {
-  id: 1,
-  loginId: "admin",
-  email: "admin@sentic.com",
-  nickname: "관리자",
-  role: "ADMIN",
-};
-
 describe("AuthContext", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.mocked(api.login).mockReset();
   });
 
-  it("logs in and stores the admin user", async () => {
+  it("logs in and stores the admin user decoded from the JWT", async () => {
     vi.mocked(api.login).mockResolvedValue({
-      accessToken: "token-123",
-      admin: adminUser,
+      accessToken: makeToken("ADMIN"),
+      refreshToken: "refresh-123",
     });
     const user = userEvent.setup();
     render(
@@ -49,15 +47,16 @@ describe("AuthContext", () => {
     await user.click(screen.getByText("login"));
 
     await waitFor(() => {
-      expect(screen.getByText("logged-in:admin")).toBeInTheDocument();
+      expect(screen.getByText("logged-in:1")).toBeInTheDocument();
     });
-    expect(localStorage.getItem("admin_access_token")).toBe("token-123");
+    expect(localStorage.getItem("admin_access_token")).toBe(makeToken("ADMIN"));
+    expect(localStorage.getItem("admin_refresh_token")).toBe("refresh-123");
   });
 
   it("logs out and clears storage", async () => {
     vi.mocked(api.login).mockResolvedValue({
-      accessToken: "token-123",
-      admin: adminUser,
+      accessToken: makeToken("ADMIN"),
+      refreshToken: "refresh-123",
     });
     const user = userEvent.setup();
     render(
@@ -67,17 +66,18 @@ describe("AuthContext", () => {
     );
 
     await user.click(screen.getByText("login"));
-    await waitFor(() => screen.getByText("logged-in:admin"));
+    await waitFor(() => screen.getByText("logged-in:1"));
 
     await user.click(screen.getByText("logout"));
     expect(screen.getByText("logged-out")).toBeInTheDocument();
     expect(localStorage.getItem("admin_access_token")).toBeNull();
+    expect(localStorage.getItem("admin_refresh_token")).toBeNull();
   });
 
   it("rejects login when the account is not an admin", async () => {
     vi.mocked(api.login).mockResolvedValue({
-      accessToken: "token-123",
-      admin: { ...adminUser, role: "USER" },
+      accessToken: makeToken("USER"),
+      refreshToken: "refresh-123",
     });
     const user = userEvent.setup();
     render(

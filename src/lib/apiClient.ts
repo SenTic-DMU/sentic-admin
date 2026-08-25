@@ -4,8 +4,11 @@ import type {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
+import { REFRESH_TOKEN_STORAGE_KEY, TOKEN_STORAGE_KEY } from "./tokenStorage";
 
-const TOKEN_STORAGE_KEY = "admin_access_token";
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retried?: boolean;
+}
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -39,16 +42,76 @@ export function unwrapEnvelope(response: AxiosResponse): AxiosResponse {
   return response;
 }
 
-export function handleAuthError(
+let refreshPromise: Promise<string> | null = null;
+
+async function performTokenRefresh(): Promise<string> {
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+  if (!refreshToken) {
+    throw new Error("리프레시 토큰이 없습니다.");
+  }
+  const response = await axios.post<
+    ApiEnvelope<{ accessToken: string; refreshToken: string }>
+  >(`${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`, undefined, {
+    headers: { "Refresh-Token": refreshToken },
+  });
+  if (!response.data.success) {
+    throw new Error(response.data.message ?? "토큰 재발급에 실패했습니다.");
+  }
+  const { accessToken, refreshToken: nextRefreshToken } = response.data.data;
+  localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
+  localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, nextRefreshToken);
+  return accessToken;
+}
+
+// 동시에 여러 요청이 401을 맞아도 refresh 호출은 한 번만 나가도록 진행 중인 프로미스를 공유한다.
+export function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = performTokenRefresh().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+export interface HandleAuthErrorDeps {
+  redirect?: () => void;
+  refresh?: () => Promise<string>;
+  retryRequest?: (
+    config: InternalAxiosRequestConfig
+  ) => Promise<AxiosResponse>;
+}
+
+export async function handleAuthError(
   error: AxiosError,
-  redirect: () => void = () => {
-    window.location.href = "/login";
+  deps: HandleAuthErrorDeps = {}
+): Promise<unknown> {
+  const {
+    redirect = () => {
+      window.location.href = "/login";
+    },
+    refresh = refreshAccessToken,
+    retryRequest = (config) => apiClient.request(config),
+  } = deps;
+
+  if (error.response?.status !== 401) {
+    return Promise.reject(error);
   }
-): Promise<never> {
-  if (error.response?.status === 401) {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    redirect();
+
+  const config = error.config as RetryableRequestConfig | undefined;
+
+  if (config && !config._retried) {
+    config._retried = true;
+    try {
+      await refresh();
+      return await retryRequest(config);
+    } catch {
+      // refresh도 실패했으면 진짜 로그아웃 처리로 넘어간다.
+    }
   }
+
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+  redirect();
   return Promise.reject(error);
 }
 

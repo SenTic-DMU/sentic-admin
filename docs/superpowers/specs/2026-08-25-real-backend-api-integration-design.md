@@ -19,7 +19,12 @@
 - 401은 기존과 동일하게 토큰 제거 + `/login`으로 리다이렉트.
 - 403(ADMIN 권한 없음)은 로그아웃시키지 않고, 호출부에서 에러 메시지를 그대로 표시한다.
 
-로그인은 일반 로그인 API `POST /api/auth/login`을 그대로 사용한다. **요청/응답 필드는 스펙에 명시되어 있지 않아 `{ loginId, password }` 요청 / 응답에 `role`(ADMIN 체크용)이 포함된 형태로 가정하고 구현한다.** 실제 필드명이 확인되면 `features/auth/api.ts`, `types.ts`만 수정하면 되도록 격리한다. 로그인 성공 후 응답의 `role`이 `"ADMIN"`이 아니면 로그인 실패로 처리한다.
+로그인은 일반 로그인 API `POST /api/auth/login`을 그대로 사용한다. 실제 백엔드(ngrok)로 확인한 계약은 다음과 같다 (2026-08-25 확인):
+
+- 요청: `{ loginId, password }`
+- 성공 응답: `{ success: true, message: "success", data: { accessToken, refreshToken } }` — **사용자 프로필(닉네임/이메일 등)은 내려오지 않는다.** 대신 `accessToken`(JWT)의 클레임에 `sub`(사용자 id)와 `role`이 들어있어, 로그인 후 `features/auth/jwt.ts`의 `decodeJwt`로 이를 꺼내 쓴다. `role !== "ADMIN"`이면 로그인 실패로 처리한다.
+- 토큰 재발급: `POST /api/auth/refresh`, **바디가 아니라 `Refresh-Token: {refreshToken}` 헤더**로 전달. 응답은 `{ success, data: { accessToken, refreshToken } }`(둘 다 새로 발급)이고, refreshToken이 만료/무효면 `401`을 반환한다. `lib/apiClient.ts`의 응답 인터셉터가 401을 받으면 이 엔드포인트로 자동 재발급을 시도하고, 성공하면 원래 요청을 한 번 재시도한다. 재발급도 실패하면 그때 토큰을 지우고 로그인 페이지로 보낸다 (동시에 여러 요청이 401을 맞아도 재발급 호출은 한 번만 나가도록 in-flight 프로미스를 공유한다).
+- 매핑되지 않은 경로로 요청 시 처음엔 404 대신 500이 내려오는 문제가 있었으나, 백엔드에서 `GlobalExceptionHandler`의 `NoResourceFoundException` 처리를 수정해 해결됨.
 
 ## 2. 페이지네이션 제거
 

@@ -7,9 +7,10 @@ import {
   type ReactNode,
 } from "react";
 import { login as loginRequest } from "./api";
+import { decodeJwt } from "./jwt";
 import type { AdminUser } from "./types";
+import { REFRESH_TOKEN_STORAGE_KEY, TOKEN_STORAGE_KEY } from "../../lib/tokenStorage";
 
-const TOKEN_STORAGE_KEY = "admin_access_token";
 const ADMIN_STORAGE_KEY = "admin_user";
 
 interface AuthContextValue {
@@ -37,15 +38,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(loginId: string, password: string) {
     const response = await loginRequest({ loginId, password });
-    if (response.admin.role !== "ADMIN") {
+    const claims = decodeJwt(response.accessToken);
+    if (claims.role !== "ADMIN") {
       throw new Error("관리자 권한이 없습니다.");
     }
     localStorage.setItem(TOKEN_STORAGE_KEY, response.accessToken);
-    setAdmin(response.admin);
+    localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.refreshToken);
+    setAdmin({ id: claims.sub, role: claims.role });
   }
 
   function logout() {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
     setAdmin(null);
   }
 

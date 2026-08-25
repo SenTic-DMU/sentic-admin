@@ -8,6 +8,12 @@ import * as api from "../../features/auth/api";
 
 vi.mock("../../features/auth/api");
 
+function makeToken(role: string, sub = "1"): string {
+  const encode = (value: unknown) =>
+    btoa(JSON.stringify(value)).replace(/\+/g, "-").replace(/\//g, "_");
+  return `${encode({ alg: "none" })}.${encode({ sub, role, exp: 9999999999 })}.sig`;
+}
+
 function renderLoginPage() {
   return render(
     <AuthProvider>
@@ -29,14 +35,8 @@ describe("LoginPage", () => {
 
   it("navigates to /members after a successful login", async () => {
     vi.mocked(api.login).mockResolvedValue({
-      accessToken: "token-123",
-      admin: {
-        id: 1,
-        loginId: "admin",
-        email: "admin@sentic.com",
-        nickname: "관리자",
-        role: "ADMIN",
-      },
+      accessToken: makeToken("ADMIN"),
+      refreshToken: "refresh-123",
     });
     const user = userEvent.setup();
     renderLoginPage();
@@ -61,6 +61,23 @@ describe("LoginPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("unauthorized")).toBeInTheDocument();
+    });
+  });
+
+  it("shows an error message when the account is not an admin", async () => {
+    vi.mocked(api.login).mockResolvedValue({
+      accessToken: makeToken("USER"),
+      refreshToken: "refresh-123",
+    });
+    const user = userEvent.setup();
+    renderLoginPage();
+
+    await user.type(screen.getByLabelText("아이디"), "admin");
+    await user.type(screen.getByLabelText("비밀번호"), "password");
+    await user.click(screen.getByRole("button", { name: "로그인" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("관리자 권한이 없습니다.")).toBeInTheDocument();
     });
   });
 });

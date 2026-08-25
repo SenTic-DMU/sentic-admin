@@ -1,9 +1,7 @@
-// 로그인 요청/응답 필드는 백엔드 확인 전 임시 가정 (확인되면 이 파일만 수정)
+// 실제 백엔드(POST /api/auth/login)로 확인된 형태. 응답에는 사용자 프로필이 없고
+// accessToken의 JWT 클레임(sub, role)만 내려온다 — 자세한 내용은 jwt.ts 참고.
 export interface AdminUser {
-  id: number;
-  loginId: string;
-  email: string;
-  nickname: string;
+  id: string;
   role: string;
 }
 
@@ -14,5 +12,5 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken: string;
-  admin: AdminUser;
+  refreshToken: string;
 }
