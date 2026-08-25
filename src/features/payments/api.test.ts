@@ -14,29 +14,29 @@ describe("payments api", () => {
   it("fetches payments for a member", async () => {
     const payments = [
       {
-        id: "p1",
-        memberId: "1",
-        memberEmail: "a@b.com",
-        memberNickname: "a",
+        id: 1,
+        userId: 1,
+        planId: 1,
         amount: 9900,
-        planName: "Premium",
         status: "SUCCESS",
+        paymentMethod: "CARD",
         paidAt: "2026-01-01",
+        expiresAt: "2026-02-01",
+        createdAt: "2026-01-01",
       },
     ];
     vi.mocked(apiClient.get).mockResolvedValue({ data: payments });
     const result = await fetchMemberPayments("1");
-    expect(apiClient.get).toHaveBeenCalledWith("/admin/members/1/payments");
+    expect(apiClient.get).toHaveBeenCalledWith("/api/admin/payments/user/1");
     expect(result).toEqual(payments);
   });
 
-  it("fetches the payments list with status, memberId, and page filters", async () => {
-    const response = { content: [], totalElements: 0, totalPages: 0 };
-    vi.mocked(apiClient.get).mockResolvedValue({ data: response });
-    const result = await fetchPayments({ status: "SUCCESS", memberId: "1", page: 0 });
-    expect(apiClient.get).toHaveBeenCalledWith("/admin/payments", {
-      params: { status: "SUCCESS", memberId: "1", page: 0 },
+  it("fetches the payments list with a status filter", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: [] });
+    const result = await fetchPayments({ status: "SUCCESS" });
+    expect(apiClient.get).toHaveBeenCalledWith("/api/admin/payments", {
+      params: { status: "SUCCESS" },
     });
-    expect(result).toEqual(response);
+    expect(result).toEqual([]);
   });
 });

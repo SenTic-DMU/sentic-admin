@@ -12,11 +12,11 @@ export function useMemberPayments(memberId: string) {
 
 export function usePayments(
   status: PaymentStatus | undefined,
-  memberId: string | undefined,
-  page: number
+  memberId: string | undefined
 ) {
   return useQuery({
-    queryKey: ["payments", status ?? "", memberId ?? "", page],
-    queryFn: () => fetchPayments({ status, memberId, page }),
+    queryKey: ["payments", status ?? "", memberId ?? ""],
+    queryFn: () =>
+      memberId ? fetchMemberPayments(memberId) : fetchPayments({ status }),
   });
 }
