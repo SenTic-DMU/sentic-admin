@@ -1,7 +1,7 @@
 export type FaqDirection = "UP" | "DOWN";
 
 export interface Faq {
-  id: string;
+  id: number;
   question: string;
   answer: string;
   orderNum: number;

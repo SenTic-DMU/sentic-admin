@@ -65,7 +65,7 @@ export function useMoveFaqOrder() {
       queryClient.setQueryData<Faq[]>(FAQS_QUERY_KEY, (old) => {
         if (!old) return old;
         const sorted = sortFaqs(old);
-        const index = sorted.findIndex((f) => f.id === id);
+        const index = sorted.findIndex((f) => String(f.id) === id);
         const targetIndex = direction === "UP" ? index - 1 : index + 1;
         if (index === -1 || targetIndex < 0 || targetIndex >= sorted.length) {
           return old;

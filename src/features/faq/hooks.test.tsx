@@ -21,8 +21,8 @@ function createWrapper() {
 }
 
 const faqs: Faq[] = [
-  { id: "1", question: "q1", answer: "a1", orderNum: 1 },
-  { id: "2", question: "q2", answer: "a2", orderNum: 2 },
+  { id: 1, question: "q1", answer: "a1", orderNum: 1 },
+  { id: 2, question: "q2", answer: "a2", orderNum: 2 },
 ];
 
 describe("useMoveFaqOrder", () => {
@@ -49,8 +49,8 @@ describe("useMoveFaqOrder", () => {
 
     await waitFor(() => {
       const cached = queryClient.getQueryData<Faq[]>(["faqs"]);
-      expect(cached?.[0].id).toBe("2");
-      expect(cached?.[1].id).toBe("1");
+      expect(cached?.[0].id).toBe(2);
+      expect(cached?.[1].id).toBe(1);
     });
   });
 
@@ -73,7 +73,7 @@ describe("useMoveFaqOrder", () => {
     await waitFor(() => expect(mutationResult.current.isError).toBe(true));
 
     const cached = queryClient.getQueryData<Faq[]>(["faqs"]);
-    expect(cached?.[0].id).toBe("1");
-    expect(cached?.[1].id).toBe("2");
+    expect(cached?.[0].id).toBe(1);
+    expect(cached?.[1].id).toBe(2);
   });
 });

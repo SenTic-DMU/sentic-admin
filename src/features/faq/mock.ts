@@ -2,19 +2,19 @@ import type { Faq, FaqDirection, FaqInput } from "./types";
 
 let mockFaqs: Faq[] = [
   {
-    id: "1",
+    id: 1,
     question: "회원가입은 어떻게 하나요?",
     answer: "앱 실행 후 이메일 또는 소셜 계정으로 가입할 수 있습니다.",
     orderNum: 1,
   },
   {
-    id: "2",
+    id: 2,
     question: "구독은 어떻게 취소하나요?",
     answer: "마이페이지 > 구독 관리에서 언제든 해지할 수 있습니다.",
     orderNum: 2,
   },
   {
-    id: "3",
+    id: 3,
     question: "학습 데이터는 어떻게 저장되나요?",
     answer: "대화 기록은 암호화되어 서버에 저장됩니다.",
     orderNum: 3,
@@ -36,7 +36,7 @@ export async function mockCreateFaq(input: FaqInput): Promise<Faq> {
   await delay(200);
   const maxOrderNum = mockFaqs.reduce((max, f) => Math.max(max, f.orderNum), 0);
   const faq: Faq = {
-    id: String(nextId++),
+    id: nextId++,
     question: input.question,
     answer: input.answer,
     orderNum: maxOrderNum + 1,
@@ -47,7 +47,7 @@ export async function mockCreateFaq(input: FaqInput): Promise<Faq> {
 
 export async function mockUpdateFaq(id: string, input: FaqInput): Promise<Faq> {
   await delay(200);
-  const index = mockFaqs.findIndex((f) => f.id === id);
+  const index = mockFaqs.findIndex((f) => String(f.id) === id);
   if (index === -1) {
     throw new Error(`Faq not found: ${id}`);
   }
@@ -58,7 +58,7 @@ export async function mockUpdateFaq(id: string, input: FaqInput): Promise<Faq> {
 
 export async function mockDeleteFaq(id: string): Promise<void> {
   await delay(200);
-  mockFaqs = mockFaqs.filter((f) => f.id !== id);
+  mockFaqs = mockFaqs.filter((f) => String(f.id) !== id);
 }
 
 export async function mockMoveFaqOrder(
@@ -67,7 +67,7 @@ export async function mockMoveFaqOrder(
 ): Promise<Faq[]> {
   await delay(200);
   const sorted = sortFaqs(mockFaqs);
-  const index = sorted.findIndex((f) => f.id === id);
+  const index = sorted.findIndex((f) => String(f.id) === id);
   if (index === -1) {
     throw new Error(`Faq not found: ${id}`);
   }
